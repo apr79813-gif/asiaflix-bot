@@ -1,44 +1,43 @@
 const express = require('express');
-const axios = require('axios');
+const { Telegraf } = require('telegraf');
 
 const app = express();
-app.use(express.json());
-
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
-// Webhook endpoint jo Telegram se messages receive karega
-app.post('/api/webhook', async (req, res) => {
-    const update = req.body;
+if (!BOT_TOKEN) {
+    console.error('BOT_TOKEN is missing!');
+    process.exit(1);
+}
 
-    if (update.message && update.message.text) {
-        const chatId = update.message.chat.id;
-        const text = update.message.text;
+const bot = new Telegraf(BOT_TOKEN);
 
-        // Agar user '/start' bhejta hai toh yeh reply aayega
-        if (text === '/start') {
-            try {
-                await axios.post(`${TELEGRAM_API}/sendMessage`, {
-                    chat_id: chatId,
-                    text: 'Namaste! Mera naam AsiaFlix Bot hai. Main ab Vercel par 24/7 live hoon! 🚀'
-                });
-            } catch (error) {
-                console.error('Error sending message:', error);
-            }
-        }
-    }
-
-    res.status(200).send('OK');
+// Start command
+bot.start((ctx) => {
+    ctx.reply('Namaste! Mera naam AsiaFlix Request Bot hai. Main ab Render par 24/7 live hoon! 🚀');
 });
 
-// Home route
-app.get('/', (req, res) => {
-    res.send('AsiaFlix Telegram Bot is running live on Vercel! 🌸');
+// Basic message response
+bot.on('text', (ctx) => {
+    ctx.reply(`Aapne kaha: "${ctx.message.text}". Bot bilkul theek kaam kar raha hai! 🔥`);
 });
 
+// Launch bot (Polling mode)
+bot.launch().then(() => {
+    console.log('Telegram Bot started successfully!');
+}).catch((err) => {
+    console.error('Error starting bot:', err);
+});
+
+// Render ke liye Express server (port binding zaroori hai)
 const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => {
+    res.send('AsiaFlix Telegram Bot is running live on Render! 🌸');
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = app;
+// Graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
