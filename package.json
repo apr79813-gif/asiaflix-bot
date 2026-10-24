@@ -1,0 +1,13 @@
+{
+  "name": "asiaflix-bot-server",
+  "version": "1.0.0",
+  "description": "AsiaFlix Private Telegram Support Bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  }
+}
