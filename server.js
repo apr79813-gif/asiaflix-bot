@@ -94,3 +94,17 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// Test route taaki browser se bot turant group me message bhej sake
+app.get('/test-group', async (req, res) => {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: ADMIN_CHAT_ID,
+            text: '🤖 Hello AsiaFlix Admin Group! Bot is now active here!'
+        })
+    });
+    const data = await response.json();
+    res.send(data);
+});
