@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // CONFIGURATIONS
-const BOT_TOKEN = "8967050529:AAFnXQG_sH5YqkxJBUkPzkqDkMeUc2kLUVA";
+const BOT_TOKEN = process.env.BOT_TOKEN;
 const GROUP_CHAT_ID = "-1004303101631";
 
 // Temporary memory to store User Chat IDs mapped by their Username or Ticket ID
