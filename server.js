@@ -8,9 +8,14 @@ const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 app.use(express.json());
 
-// Sabse simple webhook route jo har request ko catch karega
-app.post(`/api/${BOT_TOKEN}`, async (req, res) => {
-    console.log("Incoming Telegram Update:", JSON.stringify(req.body));
+// 1. Root route taaki website khulne par pata chale server zinda hai
+app.get('/', (req, res) => {
+    res.send('AsiaFlix Request Bot is running live! 🌸');
+});
+
+// 2. Universal Webhook Route (Chahe koi bhi URL ho, yeh sab catch kar lega)
+app.post('*', async (req, res) => {
+    console.log("🔥 Incoming Update from Telegram:", JSON.stringify(req.body));
     
     try {
         const update = req.body;
@@ -70,14 +75,10 @@ app.post(`/api/${BOT_TOKEN}`, async (req, res) => {
             }
         }
     } catch (err) {
-        console.error("Error processing update:", err);
+        console.error("❌ Error processing update:", err);
     }
 
     res.status(200).send('OK');
-});
-
-app.get('/', (req, res) => {
-    res.send('AsiaFlix Request Bot is running live! 🌸');
 });
 
 const PORT = process.env.PORT || 3000;
