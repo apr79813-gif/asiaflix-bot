@@ -1,21 +1,21 @@
 const express = require('express');
-const fetch = require('node-fetch');
-
 const app = express();
+
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 app.use(express.json());
 
-// 1. Root route taaki website khulne par pata chale server zinda hai
+// 1. Root route
 app.get('/', (req, res) => {
     res.send('AsiaFlix Request Bot is running live! 🌸');
 });
 
-// 2. Universal Webhook Route (Chahe koi bhi URL ho, yeh sab catch kar lega)
+// 2. Universal Webhook Route
 app.post('*', async (req, res) => {
-    console.log("🔥 Incoming Update from Telegram:", JSON.stringify(req.body));
+    console.log("🔥 Incoming Update:", JSON.stringify(req.body));
+    console.log("🔍 Configured ADMIN_CHAT_ID:", ADMIN_CHAT_ID);
     
     try {
         const update = req.body;
@@ -52,8 +52,10 @@ app.post('*', async (req, res) => {
                         })
                     });
                 } else {
-                    // Admin group mein request bhejo
-                    await fetch(`${TELEGRAM_API}/sendMessage`, {
+                    console.log("📤 Forwarding request to Admin Group ID:", ADMIN_CHAT_ID);
+                    
+                    // Admin group ko message bhejo
+                    const adminRes = await fetch(`${TELEGRAM_API}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -61,6 +63,9 @@ app.post('*', async (req, res) => {
                             text: `📩 New Request!\n\n👤 Name: ${userName}\n🆔 User ID: ${chatId}\n💬 Request: "${text}"`
                         })
                     });
+                    
+                    const adminData = await adminRes.json();
+                    console.log("📥 Telegram Response for Admin Group:", JSON.stringify(adminData));
 
                     // User ko confirmation do
                     await fetch(`${TELEGRAM_API}/sendMessage`, {
@@ -75,7 +80,7 @@ app.post('*', async (req, res) => {
             }
         }
     } catch (err) {
-        console.error("❌ Error processing update:", err);
+        console.error("❌ Error in webhook processing:", err);
     }
 
     res.status(200).send('OK');
