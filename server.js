@@ -2,15 +2,16 @@ const express = require('express');
 const https = require('https');
 
 const app = express();
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID; // -1004303101631
+const BOT_TOKEN = process.env.BOT_TOKEN ? process.env.BOT_TOKEN.trim() : '';
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID ? process.env.ADMIN_CHAT_ID.trim() : '-1004303101631';
 
 app.use(express.json());
 
 // Telegram API ko request bhejne ke liye safe function
 function sendTelegramMessage(chatId, text, replyToMessageId = null) {
+    const cleanChatId = chatId ? chatId.toString().trim() : '';
     const data = JSON.stringify({
-        chat_id: chatId,
+        chat_id: cleanChatId,
         text: text,
         reply_to_message_id: replyToMessageId
     });
@@ -22,7 +23,7 @@ function sendTelegramMessage(chatId, text, replyToMessageId = null) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Content-Length': data.length
+            'Content-Length': Buffer.byteLength(data)
         }
     };
 
@@ -30,7 +31,7 @@ function sendTelegramMessage(chatId, text, replyToMessageId = null) {
         let responseBody = '';
         res.on('data', (chunk) => { responseBody += chunk; });
         res.on('end', () => {
-            console.log(`📤 Telegram API Response for Chat ${chatId}:`, responseBody);
+            console.log(`📤 Telegram API Response for Chat ${cleanChatId}:`, responseBody);
         });
     });
 
@@ -60,7 +61,7 @@ app.get('/test-group', (req, res) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Content-Length': data.length
+            'Content-Length': Buffer.byteLength(data)
         }
     };
 
@@ -100,14 +101,12 @@ app.post('*', async (req, res) => {
                 if (text === '/start') {
                     sendTelegramMessage(chatId, 'Namaste! AsiaFlix Request Bot par aapka swagat hai. Apni movie ya series ka naam yahan bhejiye! 🍿');
                 } else {
-                    // Admin group mein request bhejo
                     console.log(`🚀 Sending request to Admin Group (${ADMIN_CHAT_ID})...`);
                     sendTelegramMessage(
                         ADMIN_CHAT_ID, 
                         `📩 New Request!\n\n👤 Name: ${userName}\n🆔 User ID: ${chatId}\n💬 Request: "${text}"`
                     );
 
-                    // User ko confirmation do
                     sendTelegramMessage(chatId, 'Aapki request admin ke paas bhej di gayi hai! Jald hi reply milega. 🌸');
                 }
             }
