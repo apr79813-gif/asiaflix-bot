@@ -46,6 +46,36 @@ app.get('/', (req, res) => {
     res.send('AsiaFlix Request Bot is running live! 🌸');
 });
 
+// Test route taaki browser se bot turant group me message bhej sake
+app.get('/test-group', (req, res) => {
+    const data = JSON.stringify({
+        chat_id: ADMIN_CHAT_ID,
+        text: '🤖 Hello AsiaFlix Admin Group! Bot is now active here!'
+    });
+
+    const options = {
+        hostname: 'api.telegram.org',
+        port: 443,
+        path: `/bot${BOT_TOKEN}/sendMessage`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length
+        }
+    };
+
+    const apiReq = https.request(options, (apiRes) => {
+        let body = '';
+        apiRes.on('data', chunk => body += chunk);
+        apiRes.on('end', () => {
+            res.send(JSON.parse(body));
+        });
+    });
+
+    apiReq.write(data);
+    apiReq.end();
+});
+
 app.post('*', async (req, res) => {
     try {
         const update = req.body;
@@ -55,7 +85,6 @@ app.post('*', async (req, res) => {
             const chatId = update.message.chat.id.toString();
             const text = update.message.text || '';
             const userName = update.message.from.first_name || 'User';
-            const messageId = update.message.message_id;
 
             // 1. Agar admin group se reply aaya hai
             if (chatId === ADMIN_CHAT_ID && update.message.reply_to_message) {
@@ -93,18 +122,4 @@ app.post('*', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
-
-// Test route taaki browser se bot turant group me message bhej sake
-app.get('/test-group', async (req, res) => {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: ADMIN_CHAT_ID,
-            text: '🤖 Hello AsiaFlix Admin Group! Bot is now active here!'
-        })
-    });
-    const data = await response.json();
-    res.send(data);
 });
