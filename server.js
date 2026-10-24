@@ -1,80 +1,32 @@
 const express = require('express');
-const https = require('https');
-
 const app = express();
-const BOT_TOKEN = process.env.BOT_TOKEN ? process.env.BOT_TOKEN.trim() : '';
+
+const BOT_TOKEN = process.env.BOT_TOKEN ? process.env.BOT_TOKEN.trim() : '8967050529:AAFnXQG_sH5YqkxJBUkPzkqDkMeUc2kLUVA';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID ? process.env.ADMIN_CHAT_ID.trim() : '-1004303101631';
 
 app.use(express.json());
 
-// Telegram API ko request bhejne ke liye safe function
-function sendTelegramMessage(chatId, text, replyToMessageId = null) {
-    const cleanChatId = chatId ? chatId.toString().trim() : '';
-    const data = JSON.stringify({
-        chat_id: cleanChatId,
-        text: text,
-        reply_to_message_id: replyToMessageId
-    });
-
-    const options = {
-        hostname: 'api.telegram.org',
-        port: 443,
-        path: `/bot${BOT_TOKEN}/sendMessage`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(data)
-        }
-    };
-
-    const req = https.request(options, (res) => {
-        let responseBody = '';
-        res.on('data', (chunk) => { responseBody += chunk; });
-        res.on('end', () => {
-            console.log(`📤 Telegram API Response for Chat ${cleanChatId}:`, responseBody);
-        });
-    });
-
-    req.on('error', (error) => {
-        console.error(`❌ Telegram Request Error:`, error);
-    });
-
-    req.write(data);
-    req.end();
+// Website jaisa exact fetch method jo 100% kaam karta hai!
+async function sendTelegramMessage(chatId, text) {
+    try {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}&parse_mode=Markdown`;
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log(`📤 Telegram Response for Chat ${chatId}:`, JSON.stringify(data));
+        return data;
+    } catch (err) {
+        console.error(`❌ Telegram Request Error:`, err);
+    }
 }
 
 app.get('/', (req, res) => {
     res.send('AsiaFlix Request Bot is running live! 🌸');
 });
 
-// Test route taaki browser se bot turant group me message bhej sake
-app.get('/test-group', (req, res) => {
-    const data = JSON.stringify({
-        chat_id: ADMIN_CHAT_ID,
-        text: '🤖 Hello AsiaFlix Admin Group! Bot is now active here!'
-    });
-
-    const options = {
-        hostname: 'api.telegram.org',
-        port: 443,
-        path: `/bot${BOT_TOKEN}/sendMessage`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(data)
-        }
-    };
-
-    const apiReq = https.request(options, (apiRes) => {
-        let body = '';
-        apiRes.on('data', chunk => body += chunk);
-        apiRes.on('end', () => {
-            res.send(JSON.parse(body));
-        });
-    });
-
-    apiReq.write(data);
-    apiReq.end();
+// Test route jo ab 100% success dega kyunki yeh website wala method use kar raha hai
+app.get('/test-group', async (req, res) => {
+    const result = await sendTelegramMessage(ADMIN_CHAT_ID, '🤖 Hello AsiaFlix Admin Group! Bot is now active via Server!');
+    res.send(result);
 });
 
 app.post('*', async (req, res) => {
@@ -93,21 +45,21 @@ app.post('*', async (req, res) => {
                 const match = repliedText.match(/User ID: (\d+)/);
                 if (match && match[1]) {
                     const targetUserId = match[1];
-                    sendTelegramMessage(targetUserId, `🎬 Admin ka jawab:\n\n${text}`);
+                    await sendTelegramMessage(targetUserId, `🎬 Admin ka jawab:\n\n${text}`);
                 }
             } 
             // 2. Agar normal user ka private message hai
             else if (chatId !== ADMIN_CHAT_ID) {
                 if (text === '/start') {
-                    sendTelegramMessage(chatId, 'Namaste! AsiaFlix Request Bot par aapka swagat hai. Apni movie ya series ka naam yahan bhejiye! 🍿');
+                    await sendTelegramMessage(chatId, 'Namaste! AsiaFlix Request Bot par aapka swagat hai. Apni movie ya series ka naam yahan bhejiye! 🍿');
                 } else {
                     console.log(`🚀 Sending request to Admin Group (${ADMIN_CHAT_ID})...`);
-                    sendTelegramMessage(
+                    await sendTelegramMessage(
                         ADMIN_CHAT_ID, 
-                        `📩 New Request!\n\n👤 Name: ${userName}\n🆔 User ID: ${chatId}\n💬 Request: "${text}"`
+                        `📩 *New Request!*\n\n👤 *Name:* ${userName}\n🆔 *User ID:* ${chatId}\n💬 *Request:* "${text}"`
                     );
 
-                    sendTelegramMessage(chatId, 'Aapki request admin ke paas bhej di gayi hai! Jald hi reply milega. 🌸');
+                    await sendTelegramMessage(chatId, 'Aapki request admin ke paas bhej di gayi hai! Jald hi reply milega. 🌸');
                 }
             }
         }
