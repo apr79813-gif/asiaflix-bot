@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
     res.send('AsiaFlix Request Bot is running live! 🌸');
 });
 
-// Test route jo ab 100% success dega kyunki yeh website wala method use kar raha hai
+// Test route
 app.get('/test-group', async (req, res) => {
     const result = await sendTelegramMessage(ADMIN_CHAT_ID, '🤖 Hello AsiaFlix Admin Group! Bot is now active via Server!');
     res.send(result);
@@ -45,7 +45,8 @@ app.post('*', async (req, res) => {
                 const match = repliedText.match(/User ID: (\d+)/);
                 if (match && match[1]) {
                     const targetUserId = match[1];
-                    await sendTelegramMessage(targetUserId, `🎬 Admin ka jawab:\n\n${text}`);
+                    // CLEAN ADMIN REPLY FORMAT
+                    await sendTelegramMessage(targetUserId, `Admin 🛡️:\n\n${text}`);
                 }
             } 
             // 2. Agar normal user ka private message hai
@@ -59,7 +60,8 @@ app.post('*', async (req, res) => {
                         `📩 *New Request!*\n\n👤 *Name:* ${userName}\n🆔 *User ID:* ${chatId}\n💬 *Request:* "${text}"`
                     );
 
-                    await sendTelegramMessage(chatId, 'Aapki request admin ke paas bhej di gayi hai! Jald hi reply milega. 🌸');
+                    // SHORT & CLEAN AUTO-REPLY
+                    await sendTelegramMessage(chatId, 'Request sent! 🌸\nAsiaFlix Prime 🚀');
                 }
             }
         }
